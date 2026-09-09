@@ -10,7 +10,7 @@ import google.generativeai as genai
 import os
 
 # --- TOKENLAR ---
-TOKEN = "8793117472:AAGpcmb_OQ92ob_dDMYx-HLZVszXkv52p3M"          # Telegram bot tokeningiz
+TOKEN = "8793117472:AAHtjePOdtatu7XD4SIatTdRjiq494b1_nE"          # Telegram bot tokeningiz
 GEMINI_API_KEY = "AQ.Ab8RN6L3qFbouSKNi_kXUryIsmpeLfqn5VM5KgKkGkpQB4PBrw"  # Google AI Studio'dan olingan to'g'ri API kalit (AIzaSy...)
 
 # Gemini'ni sozlash
