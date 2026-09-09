@@ -11,7 +11,7 @@ import os
 
 # --- TOKENLAR ---
 TOKEN = "8793117472:AAGpcmb_OQ92ob_dDMYx-HLZVszXkv52p3M"          # Telegram bot tokeningiz
-GEMINI_API_KEY = "AQ.Ab8RN6Jeioma45frbna8I9RF_3s2O9UpDZ_DKTCYB6j12PkX_w"  # Google AI Studio'dan olgan API kalitingiz
+GEMINI_API_KEY = "AQ.Ab8RN6L3qFbouSKNi_kXUryIsmpeLfqn5VM5KgKkGkpQB4PBrw"  # Google AI Studio'dan olingan to'g'ri API kalit (AIzaSy...)
 
 # Gemini'ni sozlash
 genai.configure(api_key=GEMINI_API_KEY)
@@ -64,7 +64,7 @@ async def cmd_start(message: types.Message):
         f"Salom, **{user_name}**! 🌟\n\n"
         "Bu bot — noldan boshlab milliardlab funksiyali Telegram botlar, "
         "konstruktorlar va sun'iy intellekt tizimlarini yaratishni "
-        "o'rgatadigan eng zo'r milliy akademiya!\n\n"
+        "o'rgatadigan **Nurly Al** akademiyasi!\n\n"
         "Kerakli bo'limni tanlang:"
     )
     await message.answer(text, reply_markup=main_menu(), parse_mode="Markdown")
@@ -73,7 +73,7 @@ async def cmd_start(message: types.Message):
 @dp.callback_query(F.data == "ai_help")
 async def ai_help_handler(callback: types.CallbackQuery, state: FSMContext):
     text = (
-        "🤖 **AI Kod Markazi (Gemini)**\n\n"
+        "🤖 **Nurly Al — AI Kod Markazi**\n\n"
         "Qanday bot yoki funksiya kodi kerakligini yozib yuboring "
         "(masalan: *'Majburiy obuna boti kodi'* yoki *'Referral tizim kodi'*):\n\n"
         "✍️ *Marhamat, savolingizni yuboring:*"
@@ -93,7 +93,7 @@ async def process_user_query(message: types.Message, state: FSMContext):
     user_text = message.text
   
     wait_msg = await message.answer(
-        "⏳ *Gemini siz uchun maxsus kod yozmoqda, iltimos kuting...*",
+        "⏳ *Nurly Al siz uchun maxsus kod yozmoqda, iltimos kuting...*",
         parse_mode="Markdown"
     )
   
@@ -106,7 +106,7 @@ async def process_user_query(message: types.Message, state: FSMContext):
         response = model.generate_content(prompt)
         generated_code = response.text
     except Exception as e:
-        generated_code = f"⚠️ Xatolik yuz berdi: {e}\nIltimos, Gemini API kalitingizni tekshiring."
+        generated_code = f"⚠️ Xatolik yuz berdi: {e}\nIltimos, Google AI Studio'dan to'g'ri API kalit olib qo'ying."
   
     await bot.delete_message(chat_id=message.chat.id, message_id=wait_msg.message_id)
     
@@ -130,10 +130,7 @@ async def github_info_handler(callback: types.CallbackQuery):
     text = (
         "🌐 **GitHub va Render 24/7 Sozlamasi**\n\n"
         "1. `main.py` fayliga ushbu kodni joylaysiz.\n"
-        "2. `requirements.txt` fayliga quyidagilarni yozasiz:\n"
-        "   `aiogram>=3.0.0`\n"
-        "   `google-generativeai`\n"
-        "   `aiohttp`\n"
+        "2. `requirements.txt` fayliga kerakli kutubxonalarni yozasiz.\n"
         "3. Render'ga Web Service sifatida ulab, bepul ishlatasiz!"
     )
     back_kb = InlineKeyboardMarkup(
