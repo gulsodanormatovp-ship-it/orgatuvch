@@ -6,16 +6,18 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from aiohttp import web
-import google.generativeai as genai
+from openai import OpenAI
 import os
 
 # --- TOKENLAR ---
-TOKEN = "8793117472:AAHtjePOdtatu7XD4SIatTdRjiq494b1_nE"          # Telegram bot tokeningiz
-GEMINI_API_KEY = "AQ.Ab8RN6L3qFbouSKNi_kXUryIsmpeLfqn5VM5KgKkGkpQB4PBrw"  # Google AI Studio'dan olingan to'g'ri API kalit (AIzaSy...)
+TOKEN = "8793117472:AAlhTjcP0dtatu7XD4SIatTdT RJiq494b1_nE"  # Telegram bot tokeningiz
+GROQ_API_KEY = "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"      # Groq'dan olgan gsk_... bilan boshlanuvchi kalitingiz
 
-# Gemini'ni sozlash
-genai.configure(api_key=GEMINI_API_KEY)
-model = genai.GenerativeModel('gemini-2.5-flash')
+# Groq mijozi (OpenAI formatida ishlaydi)
+client = OpenAI(
+    api_key=GROQ_API_KEY,
+    base_url="https://api.groq.com/openai/v1"
+)
 
 logging.basicConfig(level=logging.INFO)
 bot = Bot(token=TOKEN)
@@ -98,15 +100,22 @@ async def process_user_query(message: types.Message, state: FSMContext):
     )
   
     try:
-        prompt = (
-            "Sen professional Telegram botsozlik va Python ustozi-sun'iy intellektmisan. "
-            f"Foydalanuvchining so'rovi: '{user_text}'. "
-            "Shu so'rov bo'yicha Python (aiogram 3.x) yordamida ishlaydigan mukammal kod va tushuntirish yozib ber."
+        response = client.chat.completions.create(
+            model="llama-3.3-70b-versatile", # Groq'dagi eng kuchli va tez model
+            messages=[
+                {
+                    "role": "system",
+                    "content": "Sen professional Telegram botsozlik va Python ustozi-sun'iy intellektmisan. Foydalanuvchining savoliga aiogram 3.x yordamida ishlaydigan mukammal kod va tushuntirish yozib ber."
+                },
+                {
+                    "role": "user",
+                    "content": user_text
+                }
+            ]
         )
-        response = model.generate_content(prompt)
-        generated_code = response.text
+        generated_code = response.choices[0].message.content
     except Exception as e:
-        generated_code = f"⚠️ Xatolik yuz berdi: {e}\nIltimos, Google AI Studio'dan to'g'ri API kalit olib qo'ying."
+        generated_code = f"⚠️ Xatolik yuz berdi: {e}\nIltimos, API kalitingizni tekshiring."
   
     await bot.delete_message(chat_id=message.chat.id, message_id=wait_msg.message_id)
     
@@ -130,8 +139,7 @@ async def github_info_handler(callback: types.CallbackQuery):
     text = (
         "🌐 **GitHub va Render 24/7 Sozlamasi**\n\n"
         "1. `main.py` fayliga ushbu kodni joylaysiz.\n"
-        "2. `requirements.txt` fayliga kerakli kutubxonalarni yozasiz.\n"
-        "3. Render'ga Web Service sifatida ulab, bepul ishlatasiz!"
+        "2. Render'ga Web Service sifatida ulab, bepul ishlatasiz!"
     )
     back_kb = InlineKeyboardMarkup(
         inline_keyboard=[
