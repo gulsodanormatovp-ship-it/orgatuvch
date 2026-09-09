@@ -5,11 +5,13 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+from aiohttp import web
 import google.generativeai as genai
+import os
 
-# --- TOKENLARNI SHU YERGA YOZASIZ ---
-TOKEN = "8793117472:AAGpcmb_OQ92ob_dDMYx-HLZVszXkv52p3M"          # BotFather'dan olingan Telegram bot tokeni
-GEMINI_API_KEY = "sk-6488598bfbe24fcdb2ecb0f7bc372360"  # Google AI Studio'dan olingan Gemini API kaliti
+# --- TOKENLAR ---
+TOKEN = "8793117472:AAGpcmb_OQ92ob_dDMYx-HLZVszXkv52p3M"          # Telegram bot tokeningiz
+GEMINI_API_KEY = "AQ.Ab8RN6Jeioma45frbna8I9RF_3s2O9UpDZ_DKTCYB6j12PkX_w"  # Google AI Studio'dan olgan API kalitingiz
 
 # Gemini'ni sozlash
 genai.configure(api_key=GEMINI_API_KEY)
@@ -71,7 +73,7 @@ async def cmd_start(message: types.Message):
 @dp.callback_query(F.data == "ai_help")
 async def ai_help_handler(callback: types.CallbackQuery, state: FSMContext):
     text = (
-        "🤖 **AI Kod Markazi**\n\n"
+        "🤖 **AI Kod Markazi (Gemini)**\n\n"
         "Qanday bot yoki funksiya kodi kerakligini yozib yuboring "
         "(masalan: *'Majburiy obuna boti kodi'* yoki *'Referral tizim kodi'*):\n\n"
         "✍️ *Marhamat, savolingizni yuboring:*"
@@ -91,25 +93,23 @@ async def process_user_query(message: types.Message, state: FSMContext):
     user_text = message.text
   
     wait_msg = await message.answer(
-        "⏳ *AI siz uchun maxsus kod yozmoqda, iltimos kuting...*",
+        "⏳ *Gemini siz uchun maxsus kod yozmoqda, iltimos kuting...*",
         parse_mode="Markdown"
     )
   
     try:
-        # Gemini orqali haqiqiy javob va kod generatsiya qilish
         prompt = (
-            "Sen professional Telegram botsozlik va dasturlash ustozi-sun'iy intellektmisan. "
+            "Sen professional Telegram botsozlik va Python ustozi-sun'iy intellektmisan. "
             f"Foydalanuvchining so'rovi: '{user_text}'. "
-            "Shu so'rov bo'yicha Python (aiogram 3.x) yordamida ishlaydigan mukammal kod va uni tushuntiruvchi qo'llanma yozib ber."
+            "Shu so'rov bo'yicha Python (aiogram 3.x) yordamida ishlaydigan mukammal kod va tushuntirish yozib ber."
         )
         response = model.generate_content(prompt)
         generated_code = response.text
     except Exception as e:
-        generated_code = f"⚠️ Xatolik yuz berdi: {e}\nIltimos, API kalitingizni tekshiring."
+        generated_code = f"⚠️ Xatolik yuz berdi: {e}\nIltimos, Gemini API kalitingizni tekshiring."
   
     await bot.delete_message(chat_id=message.chat.id, message_id=wait_msg.message_id)
     
-    # Xabar uzunligi Telegram limitidan (4000 ta belgi) oshib ketsa, bo'lib yuborish yoki to'g'ridan-to'g'ri yuborish
     if len(generated_code) > 4000:
         for x in range(0, len(generated_code), 4000):
             await message.answer(generated_code[x:x+4000], parse_mode="Markdown")
@@ -128,13 +128,13 @@ async def process_user_query(message: types.Message, state: FSMContext):
 @dp.callback_query(F.data == "github_info")
 async def github_info_handler(callback: types.CallbackQuery):
     text = (
-        "🌐 **GitHub'ga Joylash va 24/7 Ishlatish tartibi**\n\n"
-        "1. GitHub'da yangi repozitoriy ochasiz (masalan: `bot-academy`).\n"
-        "2. `main.py` fayliga mana shu kodni joylaysiz.\n"
-        "3. Yoniga `requirements.txt` faylini ochib quyidagilarni yozasiz:\n"
+        "🌐 **GitHub va Render 24/7 Sozlamasi**\n\n"
+        "1. `main.py` fayliga ushbu kodni joylaysiz.\n"
+        "2. `requirements.txt` fayliga quyidagilarni yozasiz:\n"
         "   `aiogram>=3.0.0`\n"
         "   `google-generativeai`\n"
-        "4. Render yoki boshqa serverga ulangach, botingiz 24 soat uzluksiz ishlaydi!"
+        "   `aiohttp`\n"
+        "3. Render'ga Web Service sifatida ulab, bepul ishlatasiz!"
     )
     back_kb = InlineKeyboardMarkup(
         inline_keyboard=[
@@ -153,7 +153,22 @@ async def process_back(callback: types.CallbackQuery):
     await callback.answer()
 
 
+# --- RENDER PORTINI TA'MINLASH UCHUN WEB SERVER ---
+async def handle(request):
+    return web.Response(text="Bot is online and working!")
+
+async def web_server():
+    app = web.Application()
+    app.router.add_get("/", handle)
+    runner = web.AppRunner(app)
+    await runner.setup()
+    port = int(os.environ.get("PORT", 10000))
+    site = web.TCPSite(runner, "0.0.0.0", port)
+    await site.start()
+
+
 async def main():
+    await web_server()
     await dp.start_polling(bot)
 
 
